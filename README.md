@@ -1,5 +1,7 @@
 # pong-game
 -Without canvas pong game
 
-You can play the game.js file by copying and pasting the code into console the following site.
+* Copy the codes in the game.js file.
+* Paste into the console of any site with jQuery integration.
+
 EX: http://corporate.lcwaikiki.com/hakkimizda
