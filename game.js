@@ -1,4 +1,4 @@
-(function () {
+var gameStart = function () {
     var CONSTS = {
         gameSpeed: 20,
         side: 1,
@@ -58,6 +58,16 @@
         }
     };
 
+    var player1Score = {
+        CSS: {
+            top: 100,
+            left: 200,
+            color: '#00203FFF',
+            position: 'absolute',
+            fontSize: 100
+        }
+    };
+
     var player2Score = {
         CSS: {
             top: 100,
@@ -68,15 +78,32 @@
         }
     };
 
-    var player1Score = {
+    var winnerText = {
         CSS: {
-            top: 100,
-            left: 200,
-            color: '#00203FFF',
+            width: 300,
+            height: 100,
             position: 'absolute',
-            fontSize: 100
+            top: 250,
+            left: 300,
+            color: 'black',
+            fontSize: '30px',
+            textShadow: '-7px 9px 7px black',
+            textAlign: 'center'
         }
-    };
+    }
+
+    var newGameButton = {
+        CSS: {
+            width: '150px',
+            height: '30px',
+            position: 'absolute',
+            top: '338px',
+            left: '375px',
+            borderRadius: '50px',
+            color: 'white',
+            background: 'rgb(0, 32, 63)'
+        }
+    }
 
     var ball = {
         topSpeed: 0,
@@ -98,31 +125,15 @@
                 $('#score-player-2').text(player2.score);
                 $('#score-player-1').text(player1.score);
 
-                draw.drawItemTo('div', 'winner-text', {
-                    width: 300,
-                    height: 100,
-                    position: 'absolute',
-                    top: 250,
-                    left: 300,
-                    color: 'black',
-                    fontSize: '30px',
-                    textShadow: '-7px 9px 7px black',
-                    textAlign: 'center'
-                }, '#pong-game', 'WİNNER ' + (player1.score === 5 ? 'PLAYER 1' : 'PLAYER 2'));
-
-                draw.drawItemTo('button', 'btn-new-game', {
-                    width: '150px',
-                    height: '30px',
-                    position: 'absolute',
-                    top: '338px',
-                    left: '375px',
-                    borderRadius: '50px',
-                    color: 'white',
-                    background: 'rgb(0, 32, 63)'
-                }, '#pong-game', 'NEW GAME')
+                draw.drawItemTo('div', 'winner-text', winnerText.CSS, '#pong-game',
+                    'WİNNER ' + (player1.score === 5 ? 'PLAYER 1' : 'PLAYER 2'));
+                draw.drawItemTo('button', 'btn-new-game', newGameButton.CSS, '#pong-game', 'NEW GAME');
             } else {
                 ball.CSS.top = Math.random() < 0.5 ? 0 : arena.CSS.height - ball.CSS.height;
                 ball.CSS.left = 450 - ball.CSS.width / 2;
+
+                CONSTS.player1Hit = true;
+                CONSTS.player2Hit = true;
 
                 //BALL DİRECTION 
                 if (CONSTS.game === 0) {
@@ -136,13 +147,10 @@
                 $('#score-player-2').text(player2.score);
                 $('#score-player-1').text(player1.score);
 
-                CONSTS.player1Hit = true;
-                CONSTS.player2Hit = true;
-
                 var angle = 0;
 
                 if (ball.CSS.top === 0) {
-                    angle = CONSTS.playerTurn === -1 ? Math.random() * 60 + 30 : Math.random() * 60 + 340;
+                    angle = CONSTS.playerTurn === -1 ? Math.random() * 60 + 10 : Math.random() * 60 + 280;
                 } else {
                     angle = CONSTS.playerTurn === -1 ? Math.random() * 60 + 100 : Math.random() * 60 + 200;
                 }
@@ -151,43 +159,11 @@
                 var ballTopAngle = Math.cos(rads);
                 var ballLeftAngle = Math.sin(rads);
 
-                ball.topSpeed = this.acceleration * ballTopAngle;
-                ball.leftSpeed = this.acceleration * -ballLeftAngle;
-            }
-        },
-    };
-
-    var storage = {
-        saveGame: function () {
-            localStorage.setItem('save-game-data', JSON.stringify({
-                ball,
-                player1Score,
-                player2Score,
-                player2,
-                player1,
-                CONSTS
-            }));
-        },
-        loadGame: {
-            getGameData: function (session) {
-                if (session === 'new') {
-                    loadGameData = JSON.parse(localStorage.getItem('new-game-data'));
-                } else if (session === 'load') {
-                    loadGameData = JSON.parse(localStorage.getItem('save-game-data'));
-                }
-
-                return loadGameData;
-            },
-            setGameData: function (loadGameData) {
-                ball = loadGameData.ball;
-                player1Score = loadGameData.player1Score;
-                player2Score = loadGameData.player2Score;
-                player2 = loadGameData.player2;
-                player1 = loadGameData.player1;
-                CONSTS = loadGameData.CONSTS;
+                ball.topSpeed = ball.acceleration * ballTopAngle;
+                ball.leftSpeed = ball.acceleration * -ballLeftAngle;
             }
         }
-    }
+    };
 
     var draw = {
         drawItemTo: function (type, id, css, appendTo, text) {
@@ -248,6 +224,7 @@
                         (player1.CSS.top + player1.CSS.height) + ball.CSS.width && ball.CSS.left + ball.CSS.width <=
                         player1.CSS.width + ball.CSS.width && CONSTS.player2Hit) {
                         ball.leftSpeed = ball.leftSpeed * -1;
+
                         CONSTS.player1Hit = true;
                         CONSTS.player2Hit = false;
                     }
@@ -260,12 +237,9 @@
 
                         CONSTS.player1Hit = false;
                         CONSTS.player2Hit = true;
-
-                        // if (player2.CSS.top + player2.CSS.height * 0.33)
                     }
 
-                    //topu artırken lefti azalt
-                    //STİCK ANGER COLLISION
+                    //STİCK HALF COLLISION
                     // if (player1.CSS.top + player1.CSS.height / 2 <= ball.CSS.top + ball.CSS.height &&
                     //     ball.CSS.left <= player1.CSS.width) {
                     //     ball.topSpeed = ball.topSpeed;
@@ -291,10 +265,12 @@
                     if (ball.CSS.left > arena.CSS.width) {
                         CONSTS.playerTurn = 1;
                         player1.score++;
+
                         ball.roll();
                     } else if (ball.CSS.left <= 0) {
                         CONSTS.playerTurn = -1;
                         player2.score++;
+
                         ball.roll();
                     }
                 }
@@ -302,10 +278,43 @@
         }
     }
 
+    var storage = {
+        //TODO
+        saveGame: function () {
+            localStorage.setItem('save-game-data', JSON.stringify({
+                ball,
+                player1Score,
+                player2Score,
+                player2,
+                player1,
+                CONSTS
+            }));
+        },
+        loadGame: {
+            getGameData: function () {
+                return JSON.parse(localStorage.getItem('save-game-data'));
+            },
+            setGameData: function (loadGameData) {
+                ball = loadGameData.ball;
+                player1Score = loadGameData.player1Score;
+                player2Score = loadGameData.player2Score;
+                player2 = loadGameData.player2;
+                player1 = loadGameData.player1;
+                CONSTS = loadGameData.CONSTS;
+            }
+        }
+    }
+
     var events = {
         setEvents: function () {
             window.addEventListener('keydown', this.onPress);
             window.addEventListener('keyup', this.onBreak);
+
+            $(document).on('click', '#btn-new-game', this.newGame);
+        },
+        newGame: function () {
+            $('#pong-game').remove();
+            gameStart();
         },
         onPress: function (event) {
             //Disable arrow key on page
@@ -339,21 +348,8 @@
             }
         }
     }
-    $('#btn-new-game').on('click', function () {
-        storage.loadGame.setGameData(storage.loadGameData.getGameData('new'));
-        start();
-    });
 
     function start() {
-        localStorage.setItem('new-game-data', JSON.stringify({
-            ball,
-            player1Score,
-            player2Score,
-            player2,
-            player1,
-            CONSTS
-        }));
-
         draw.drawGameItems();
         events.setEvents();
         ball.roll();
@@ -361,4 +357,4 @@
     }
 
     start();
-})();
+}
