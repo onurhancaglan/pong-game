@@ -8,6 +8,12 @@ var gameStart = function () {
         player2Hit: true
     };
 
+    var gameTypes = {
+        playerVplayer: false,
+        playerVcpu: false,
+        cpuVcpu: false
+    }
+
     var arena = {
         CSS: {
             width: 900,
@@ -105,6 +111,20 @@ var gameStart = function () {
         }
     }
 
+    var menuButton = {
+        CSS: {
+            width: '150px',
+            height: '30px',
+            position: 'absolute',
+            marginBottom: '50px',
+            top: '338px',
+            left: '375px',
+            borderRadius: '50px',
+            color: 'white',
+            background: 'rgb(0, 32, 63)'
+        }
+    }
+
     var ball = {
         topSpeed: 0,
         leftSpeed: 0,
@@ -129,7 +149,7 @@ var gameStart = function () {
 
             draw.drawItemTo('div', 'winner-text', winnerText.CSS, '#pong-game',
                 'WİNNER ' + (player1.score === 5 ? 'PLAYER 1' : 'PLAYER 2'));
-            draw.drawItemTo('button', 'btn-new-game', newGameButton.CSS, '#pong-game', 'NEW GAME');
+            draw.drawItemTo('button', 'btn-restart', newGameButton.CSS, '#pong-game', 'RESTART');
         } else {
             ball.CSS.top = (arena.CSS.height / 2) + (ball.CSS.height / 2);
             ball.CSS.left = 450 - ball.CSS.width / 2;
@@ -165,6 +185,12 @@ var gameStart = function () {
                 id: id,
                 text: text
             }).css(css).appendTo(appendTo);
+        },
+        drawMenuItems: function () {
+            this.drawItemTo('div', 'game-menu', arena.CSS, 'body');
+            this.drawItemTo('button', 'btn-player-player', menuButton.CSS, '#game-menu', 'PLAYER V PLAYER');
+            this.drawItemTo('button', 'btn-player-cpu', menuButton.CSS, '#game-menu', 'PLAYER V CPU');
+            this.drawItemTo('button', 'btn-cpu-cpu', menuButton.CSS, '#game-menu', 'CPU V CPU');
         },
         drawGameItems: function () {
             this.drawItemTo('div', 'pong-game', arena.CSS, 'body');
@@ -202,6 +228,17 @@ var gameStart = function () {
         loop: function () {
             window.pongLoop = setInterval(function () {
                 if (CONSTS.game !== 0) {
+                    if (gameTypes.playerVcpu) {
+                        if (ball.CSS.top + ball.CSS.height > player2.CSS.top + player2.CSS.height) {
+                            player2.speed += 6;
+                        } else if (player2.CSS.top <= ball.CSS.top + ball.CSS.height / 8 &&
+                            ball.CSS.top + ball.CSS.height / 8 <= player2.CSS.top + player2.CSS.height) {
+                            player2.speed = 1;
+                        } else {
+                            player2.speed -= 6;
+                        }
+                    }
+
                     player1.CSS.top += player1.speed;
                     $('#player-1').css('top', player1.CSS.top);
 
@@ -256,12 +293,12 @@ var gameStart = function () {
                     }
 
                     // BALL OUT OF BOUNDS | SCORE
-                    if (ball.CSS.left > arena.CSS.width) {
+                    if (ball.CSS.left + ball.CSS.width > arena.CSS.width) {
                         CONSTS.playerTurn = 1;
                         player1.score++;
 
                         ballRoll();
-                    } else if (ball.CSS.left <= 0) {
+                    } else if (ball.CSS.left + ball.CSS.width <= 0) {
                         CONSTS.playerTurn = -1;
                         player2.score++;
 
@@ -279,10 +316,13 @@ var gameStart = function () {
             window.addEventListener('keydown', this.onPress);
             window.addEventListener('keyup', this.onBreak);
 
-            $(document).off('click').on('click', '#btn-new-game', this.newGame);
+            $(document).off('click').on('click', '#btn-restart', restartGame);
+            $(document).off('click').on('click', '#btn-player-player', this.setGameTypeAndStart);
+            $(document).off('click').on('click', '#btn-player-cpu', this.setGameTypeAndStart);
+            $(document).off('click').on('click', '#btn-cpu-cpu', this.setGameTypeAndStart);
         },
-        newGame: function () {
-            restartGame();
+        setGameTypeAndStart: function (event) {
+            console.log(event);
         },
         onPress: function (event) {
             //Disable arrow key on page
@@ -291,19 +331,30 @@ var gameStart = function () {
                 event.returnValue = false;
             }
 
-            switch (event.keyCode) {
-                case 87:
-                    player1.speed = -12;
-                    break;
-                case 83:
-                    player1.speed = 12;
-                    break;
-                case 38:
-                    player2.speed = -12;
-                    break;
-                case 40:
-                    player2.speed = 12;
-                    break;
+            if (gameTypes.playerVplayer) {
+                switch (event.keyCode) {
+                    case 87:
+                        player1.speed = -12;
+                        break;
+                    case 83:
+                        player1.speed = 12;
+                        break;
+                    case 38:
+                        player2.speed = -12;
+                        break;
+                    case 40:
+                        player2.speed = 12;
+                        break;
+                }
+            } else if (!gameTypes.cpuVcpu) {
+                switch (event.keyCode) {
+                    case 87:
+                        player1.speed = -12;
+                        break;
+                    case 83:
+                        player1.speed = 12;
+                        break;
+                }
             }
         },
         onBreak: function (event) {
@@ -345,23 +396,52 @@ var gameStart = function () {
 
     var savedGameData = storage.loadGame.getGameData();
 
-    if (savedGameData.CONSTS.game !== 0) {
+    if (((savedGameData || {}).CONSTS || {}).game || 0 !== 0) {
         var loadGame = window.confirm("Saved game available. Would you like to load it?");
 
         if (loadGame === true) {
             storage.loadGame.setGameData(savedGameData);
 
             window.pongGameLoaded = true;
+            startGame();
         }
     }
 
-    if (window.pongGameLoaded !== true) {
-        ballRoll();
+    /**var _player1 = false;
+    var _player2 = false;
+
+    if (confirm('is the first player a human?')) {
+        _player1 = true;
+        if (confirm('is the second player a human?')) {
+            _player2 = true;
+        } else {
+            _player2 = false;
+        }
+    } else {
+        _player1 = false;
     }
 
-    draw.drawGameItems();
-    events.setEvents();
-    game.loop();
+    if (_player1 && _player2) {
+        gameTypes.playerVplayer = true;
+    } else if (!_player1 && !_player2) {
+        gameTypes.cpuVcpu = true;
+    } else {
+        gameTypes.playerVcpu = true;
+    } */
+
+    if (window.pongGameLoaded !== true) {
+        draw.drawMenuItems();
+    }
+
+    function startGame() {
+        if (window.pongGameLoaded !== true) {
+            ballRoll();
+        }
+
+        draw.drawGameItems();
+        events.setEvents();
+        game.loop();
+    }
 }
 
 gameStart();
