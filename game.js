@@ -1,4 +1,4 @@
-var gameStart = function () {
+function gameStart() {
     var CONSTS = {
         gameSpeed: 20,
         side: 1,
@@ -140,7 +140,7 @@ var gameStart = function () {
         }
     };
 
-    ballRoll = function () {
+    function ballRoll() {
         if (player1.score === 5 || player2.score === 5) {
             CONSTS.game = 0;
 
@@ -169,15 +169,32 @@ var gameStart = function () {
             $('#score-player-2').text(player2.score);
             $('#score-player-1').text(player1.score);
 
-            var angle = CONSTS.playerTurn === -1 ? Math.random() * 120 + 30 : Math.random() * 120 + 210;
-            var rads = angle * Math.PI / 180;
-            var ballTopAngle = Math.cos(rads);
-            var ballLeftAngle = Math.sin(rads);
+            var ballAngle = {};
 
-            ball.topSpeed = ball.acceleration * ballTopAngle;
-            ball.leftSpeed = ball.acceleration * -ballLeftAngle;
+            if (CONSTS.playerTurn === -1) {
+                ballAngle = getBallAngle(Math.random() * 120 + 30);
+            } else {
+                ballAngle = getBallAngle(Math.random() * 120 + 210);
+            }
+
+            ball.topSpeed = ball.acceleration * ballAngle.top;
+            ball.leftSpeed = ball.acceleration * -ballAngle.left;
         }
     }
+
+    function getBallAngle(angle) {
+        var _ballAngle = {
+            top: 0,
+            left: 0
+        }
+        var rads = angle * Math.PI / 180;
+
+        _ballAngle.top = Math.cos(rads);
+        _ballAngle.left = Math.sin(rads);
+
+        return _ballAngle;
+    }
+
 
     var draw = {
         drawItemTo: function (type, id, css, appendTo, text) {
@@ -188,8 +205,13 @@ var gameStart = function () {
         },
         drawMenuItems: function () {
             this.drawItemTo('div', 'game-menu', arena.CSS, 'body');
+            this.drawItemTo('div', 'pong-game-text', winnerText.CSS, '#game-menu', 'PONG GAME');
             this.drawItemTo('button', 'btn-player-player', menuButton.CSS, '#game-menu', 'PLAYER V PLAYER');
+            menuButton.CSS.top = (parseInt(menuButton.CSS.top) + 50) + 'px';
+
             this.drawItemTo('button', 'btn-player-cpu', menuButton.CSS, '#game-menu', 'PLAYER V CPU');
+            menuButton.CSS.top = (parseInt(menuButton.CSS.top) + 50) + 'px';
+
             this.drawItemTo('button', 'btn-cpu-cpu', menuButton.CSS, '#game-menu', 'CPU V CPU');
         },
         drawGameItems: function () {
@@ -233,9 +255,30 @@ var gameStart = function () {
                             player2.speed += 6;
                         } else if (player2.CSS.top <= ball.CSS.top + ball.CSS.height / 8 &&
                             ball.CSS.top + ball.CSS.height / 8 <= player2.CSS.top + player2.CSS.height) {
-                            player2.speed = 1;
+                            player2.speed = 0;
                         } else {
                             player2.speed -= 6;
+                        }
+                    } else if (gameTypes.cpuVcpu) {
+                        if (CONSTS.player1Hit) {
+                            if (ball.CSS.top + ball.CSS.height > player2.CSS.top + player2.CSS.height) {
+                                player2.speed += 6;
+                            } else if (player2.CSS.top <= ball.CSS.top + ball.CSS.height / 8 &&
+                                ball.CSS.top + ball.CSS.height / 8 <= player2.CSS.top + player2.CSS.height) {
+                                player2.speed = 0;
+                            } else if (player2.CSS.top + player2.CSS.height > ball.CSS.top + ball.CSS.height) {
+                                player2.speed -= 6;
+                            }
+                        }
+
+                        if (CONSTS.player2Hit) {
+                            if (player1.CSS.top + player1.CSS.height < ball.CSS.top + ball.CSS.height) {
+                                player1.speed += 6;
+                            } else if (player1.CSS.top < ball.CSS.top + ball.CSS.height && player1.CSS.top + player1.CSS.height > ball.CSS.top + ball.CSS.height) {
+                                player1.speed = 0;
+                            } else {
+                                player1.speed -= 6;
+                            }
                         }
                     }
 
@@ -251,17 +294,23 @@ var gameStart = function () {
                     ball.CSS.left += ball.leftSpeed;
 
                     //COlLİSİON
-                    if (player1.CSS.top <= ball.CSS.top + ball.CSS.height / 1 && ball.CSS.top + ball.CSS.height / 1 <=
-                        (player1.CSS.top + player1.CSS.height) + ball.CSS.width && ball.CSS.left + ball.CSS.width <=
+                    if (player1.CSS.top <= ball.CSS.top + ball.CSS.height && ball.CSS.top <=
+                        player1.CSS.top + player1.CSS.height && ball.CSS.left + ball.CSS.width <=
                         player1.CSS.width + ball.CSS.width && CONSTS.player2Hit) {
+
+                        //HALF COLLİSİON
+                        if (player1.CSS.top + player1.CSS.height / 2 > ball.CSS.top + ball.CSS.height) {
+                            ball.topSpeed = ball.topSpeed;
+                        }
+
                         ball.leftSpeed = ball.leftSpeed * -1;
 
                         CONSTS.player1Hit = true;
                         CONSTS.player2Hit = false;
                     }
 
-                    if (player2.CSS.top <= ball.CSS.top + ball.CSS.height / 8 &&
-                        ball.CSS.top + ball.CSS.height / 8 <= player2.CSS.top + player2.CSS.height &&
+                    if (player2.CSS.top <= ball.CSS.top + ball.CSS.height &&
+                        ball.CSS.top <= player2.CSS.top + player2.CSS.height &&
                         ball.CSS.left + ball.CSS.width >= arena.CSS.width - player2.CSS.width &&
                         CONSTS.player1Hit) {
                         ball.leftSpeed = ball.leftSpeed * -1;
@@ -270,16 +319,7 @@ var gameStart = function () {
                         CONSTS.player2Hit = true;
                     }
 
-                    //STİCK HALF COLLISION
-                    // if (player1.CSS.top + player1.CSS.height / 2 <= ball.CSS.top + ball.CSS.height &&
-                    //     ball.CSS.left <= player1.CSS.width) {
-                    //     ball.topSpeed = ball.topSpeed;
-                    // }
 
-                    // if (ball.CSS.top + ball.CSS.height < (player1.CSS.top + player1.CSS.height) - player1.CSS.height / 2 &&
-                    //     ball.CSS.left <= player1.CSS.width) {
-                    //     ball.topSpeed = ball.topSpeed;
-                    // }
 
                     $('#pong-ball').css({
                         left: ball.CSS.left,
@@ -316,13 +356,28 @@ var gameStart = function () {
             window.addEventListener('keydown', this.onPress);
             window.addEventListener('keyup', this.onBreak);
 
-            $(document).off('click').on('click', '#btn-restart', restartGame);
-            $(document).off('click').on('click', '#btn-player-player', this.setGameTypeAndStart);
-            $(document).off('click').on('click', '#btn-player-cpu', this.setGameTypeAndStart);
-            $(document).off('click').on('click', '#btn-cpu-cpu', this.setGameTypeAndStart);
+            $('body').off('click').on('click', '#btn-restart', restartGame);
+
+            $(document).off('click').on('click', '#btn-player-player, #btn-player-cpu, #btn-cpu-cpu',
+                this.setGameTypeAndPlay);
         },
-        setGameTypeAndStart: function (event) {
-            console.log(event);
+        setGameTypeAndPlay: function (event) {
+            switch (event.target.id) {
+                case 'btn-player-cpu':
+                    gameTypes.playerVcpu = true;
+                    break;
+                case 'btn-player-player':
+                    gameTypes.playerVplayer = true;
+                    break;
+                case 'btn-cpu-cpu':
+                    gameTypes.cpuVcpu = true;
+                    break;
+                default:
+                    gameTypes.playerVplayer = true;
+                    break;
+            }
+
+            startGame();
         },
         onPress: function (event) {
             //Disable arrow key on page
@@ -376,7 +431,8 @@ var gameStart = function () {
                 player2Score,
                 player2,
                 player1,
-                CONSTS
+                CONSTS,
+                gameTypes
             }));
         },
         loadGame: {
@@ -390,47 +446,34 @@ var gameStart = function () {
                 player2 = loadGameData.player2;
                 player1 = loadGameData.player1;
                 CONSTS = loadGameData.CONSTS;
+                gameTypes = loadGameData.gameTypes;
+            },
+            userLoadedGame: function () {
+                var loadGame = window.confirm("Saved game available. Would you like to load it?");
+
+                if (loadGame === true) {
+                    storage.loadGame.setGameData(savedGameData);
+
+                    window.pongGameLoaded = true;
+                    events.setEvents();
+                    startGame();
+
+                }
             }
         }
     }
 
+    //if saved game data exists, Ask if you want to load game
     var savedGameData = storage.loadGame.getGameData();
 
     if (((savedGameData || {}).CONSTS || {}).game || 0 !== 0) {
-        var loadGame = window.confirm("Saved game available. Would you like to load it?");
-
-        if (loadGame === true) {
-            storage.loadGame.setGameData(savedGameData);
-
-            window.pongGameLoaded = true;
-            startGame();
-        }
+        storage.loadGame.userLoadedGame();
     }
 
-    /**var _player1 = false;
-    var _player2 = false;
-
-    if (confirm('is the first player a human?')) {
-        _player1 = true;
-        if (confirm('is the second player a human?')) {
-            _player2 = true;
-        } else {
-            _player2 = false;
-        }
-    } else {
-        _player1 = false;
-    }
-
-    if (_player1 && _player2) {
-        gameTypes.playerVplayer = true;
-    } else if (!_player1 && !_player2) {
-        gameTypes.cpuVcpu = true;
-    } else {
-        gameTypes.playerVcpu = true;
-    } */
-
+    //Load menu page
     if (window.pongGameLoaded !== true) {
         draw.drawMenuItems();
+        events.setEvents();
     }
 
     function startGame() {
@@ -439,7 +482,6 @@ var gameStart = function () {
         }
 
         draw.drawGameItems();
-        events.setEvents();
         game.loop();
     }
 }
@@ -447,7 +489,9 @@ var gameStart = function () {
 gameStart();
 
 function restartGame() {
-    document.getElementById('pong-game').remove();
+    $('#pong-game').remove();
+    $('#game-menu').remove();
 
+    window.pongGameLoaded = false;
     gameStart();
 }
