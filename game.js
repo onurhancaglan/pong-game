@@ -140,6 +140,19 @@ function gameStart() {
         }
     };
 
+    function getBallAngle(angle) {
+        var _ballAngle = {
+            top: 0,
+            left: 0
+        }
+        var rads = angle * Math.PI / 180;
+
+        _ballAngle.top = Math.cos(rads);
+        _ballAngle.left = Math.sin(rads);
+
+        return _ballAngle;
+    }
+
     function ballRoll() {
         if (player1.score === 5 || player2.score === 5) {
             CONSTS.game = 0;
@@ -181,20 +194,6 @@ function gameStart() {
             ball.leftSpeed = ball.acceleration * -ballAngle.left;
         }
     }
-
-    function getBallAngle(angle) {
-        var _ballAngle = {
-            top: 0,
-            left: 0
-        }
-        var rads = angle * Math.PI / 180;
-
-        _ballAngle.top = Math.cos(rads);
-        _ballAngle.left = Math.sin(rads);
-
-        return _ballAngle;
-    }
-
 
     var draw = {
         drawItemTo: function (type, id, css, appendTo, text) {
@@ -247,38 +246,38 @@ function gameStart() {
                 player2.CSS.top = arena.CSS.height - player2.CSS.height;
             }
         },
+        player2CPU: function () {
+            if (ball.CSS.top + ball.CSS.height > player2.CSS.top + player2.CSS.height) {
+                player2.speed += 6;
+            } else if (player2.CSS.top <= ball.CSS.top + ball.CSS.height / 8 &&
+                ball.CSS.top + ball.CSS.height / 8 <= player2.CSS.top + player2.CSS.height) {
+                player2.speed = 0;
+            } else {
+                player2.speed -= 6;
+            }
+        },
+        player1CPU: function () {
+            if (player1.CSS.top + player1.CSS.height < ball.CSS.top + ball.CSS.height) {
+                player1.speed += 6;
+            } else if (player1.CSS.top < ball.CSS.top + ball.CSS.height &&
+                player1.CSS.top + player1.CSS.height > ball.CSS.top + ball.CSS.height) {
+                player1.speed = 0;
+            } else {
+                player1.speed -= 6;
+            }
+        },
         loop: function () {
             window.pongLoop = setInterval(function () {
                 if (CONSTS.game !== 0) {
                     if (gameTypes.playerVcpu) {
-                        if (ball.CSS.top + ball.CSS.height > player2.CSS.top + player2.CSS.height) {
-                            player2.speed += 6;
-                        } else if (player2.CSS.top <= ball.CSS.top + ball.CSS.height / 8 &&
-                            ball.CSS.top + ball.CSS.height / 8 <= player2.CSS.top + player2.CSS.height) {
-                            player2.speed = 0;
-                        } else {
-                            player2.speed -= 6;
-                        }
+                        game.player2CPU();
                     } else if (gameTypes.cpuVcpu) {
                         if (CONSTS.player1Hit) {
-                            if (ball.CSS.top + ball.CSS.height > player2.CSS.top + player2.CSS.height) {
-                                player2.speed += 6;
-                            } else if (player2.CSS.top <= ball.CSS.top + ball.CSS.height / 8 &&
-                                ball.CSS.top + ball.CSS.height / 8 <= player2.CSS.top + player2.CSS.height) {
-                                player2.speed = 0;
-                            } else if (player2.CSS.top + player2.CSS.height > ball.CSS.top + ball.CSS.height) {
-                                player2.speed -= 6;
-                            }
+                            game.player2CPU();
                         }
 
                         if (CONSTS.player2Hit) {
-                            if (player1.CSS.top + player1.CSS.height < ball.CSS.top + ball.CSS.height) {
-                                player1.speed += 6;
-                            } else if (player1.CSS.top < ball.CSS.top + ball.CSS.height && player1.CSS.top + player1.CSS.height > ball.CSS.top + ball.CSS.height) {
-                                player1.speed = 0;
-                            } else {
-                                player1.speed -= 6;
-                            }
+                            game.player1CPU();
                         }
                     }
 
@@ -297,13 +296,22 @@ function gameStart() {
                     if (player1.CSS.top <= ball.CSS.top + ball.CSS.height && ball.CSS.top <=
                         player1.CSS.top + player1.CSS.height && ball.CSS.left + ball.CSS.width <=
                         player1.CSS.width + ball.CSS.width && CONSTS.player2Hit) {
+                        var ballAngle = 0;
 
                         //HALF COLLİSİON
-                        if (player1.CSS.top + player1.CSS.height / 2 > ball.CSS.top + ball.CSS.height) {
-                            ball.topSpeed = ball.topSpeed;
+                        if (player1.CSS.top + (player1.CSS.height / 2) - (ball.CSS.height / 2) >=
+                            ball.CSS.top + ball.CSS.height) {
+                            ballAngle = getBallAngle(120);
+                        } else if (player1.CSS.top + (player1.CSS.height / 2) +
+                            (ball.CSS.height / 2) <= ball.CSS.top + ball.CSS.height &&
+                            player1.CSS.top + player1.CSS.height >= ball.CSS.top + ball.CSS.height) {
+                            ballAngle = getBallAngle(60);
+                        } else {
+                            ballAngle = getBallAngle(90);
                         }
 
-                        ball.leftSpeed = ball.leftSpeed * -1;
+                        ball.topSpeed = ball.acceleration * ballAngle.top;
+                        ball.leftSpeed = ball.acceleration * ballAngle.left;
 
                         CONSTS.player1Hit = true;
                         CONSTS.player2Hit = false;
@@ -313,13 +321,25 @@ function gameStart() {
                         ball.CSS.top <= player2.CSS.top + player2.CSS.height &&
                         ball.CSS.left + ball.CSS.width >= arena.CSS.width - player2.CSS.width &&
                         CONSTS.player1Hit) {
-                        ball.leftSpeed = ball.leftSpeed * -1;
+
+                        //HALF COLLİSİON
+                        if (player2.CSS.top + (player2.CSS.height / 2) - (ball.CSS.height / 2) >=
+                            ball.CSS.top + ball.CSS.height) {
+                            ballAngle = getBallAngle(210);
+                        } else if (player2.CSS.top + (player2.CSS.height / 2) +
+                            (ball.CSS.height / 2) <= ball.CSS.top + ball.CSS.height &&
+                            player2.CSS.top + player2.CSS.height >= ball.CSS.top + ball.CSS.height) {
+                            ballAngle = getBallAngle(170);
+                        } else {
+                            ballAngle = getBallAngle(200);
+                        }
+
+                        ball.topSpeed = ball.acceleration * ballAngle.top;
+                        ball.leftSpeed = ball.acceleration * ballAngle.left;
 
                         CONSTS.player1Hit = false;
                         CONSTS.player2Hit = true;
                     }
-
-
 
                     $('#pong-ball').css({
                         left: ball.CSS.left,
