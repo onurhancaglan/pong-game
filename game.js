@@ -300,11 +300,11 @@ function gameStart() {
 
                         //HALF COLLİSİON
                         if (player1.CSS.top + (player1.CSS.height / 2) - (ball.CSS.height / 2) >=
-                            ball.CSS.top + ball.CSS.height) {
+                            ball.CSS.top + (ball.CSS.height / 2)) {
                             ballAngle = getBallAngle(120);
                         } else if (player1.CSS.top + (player1.CSS.height / 2) +
-                            (ball.CSS.height / 2) <= ball.CSS.top + ball.CSS.height &&
-                            player1.CSS.top + player1.CSS.height >= ball.CSS.top + ball.CSS.height) {
+                            (ball.CSS.height / 2) < ball.CSS.top + ball.CSS.height &&
+                            player1.CSS.top + player1.CSS.height > ball.CSS.top + (ball.CSS.height / 2)) {
                             ballAngle = getBallAngle(60);
                         } else {
                             ballAngle = getBallAngle(90);
@@ -323,15 +323,15 @@ function gameStart() {
                         CONSTS.player1Hit) {
 
                         //HALF COLLİSİON
-                        if (player2.CSS.top + (player2.CSS.height / 2) - (ball.CSS.height / 2) >=
-                            ball.CSS.top + ball.CSS.height) {
-                            ballAngle = getBallAngle(210);
+                        if (player2.CSS.top + (player2.CSS.height / 2) - (ball.CSS.height / 2) >
+                            ball.CSS.top + (ball.CSS.height / 2)) {
+                            ballAngle = getBallAngle(240);
                         } else if (player2.CSS.top + (player2.CSS.height / 2) +
-                            (ball.CSS.height / 2) <= ball.CSS.top + ball.CSS.height &&
-                            player2.CSS.top + player2.CSS.height >= ball.CSS.top + ball.CSS.height) {
-                            ballAngle = getBallAngle(170);
+                            (ball.CSS.height / 2) < ball.CSS.top + ball.CSS.height &&
+                            player2.CSS.top + player2.CSS.height > ball.CSS.top + (ball.CSS.height / 2)) {
+                            ballAngle = getBallAngle(300);
                         } else {
-                            ballAngle = getBallAngle(200);
+                            ballAngle = getBallAngle(270);
                         }
 
                         ball.topSpeed = ball.acceleration * ballAngle.top;
