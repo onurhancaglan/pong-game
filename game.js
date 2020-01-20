@@ -248,22 +248,22 @@ function gameStart() {
         },
         player2CPU: function () {
             if (ball.CSS.top + ball.CSS.height > player2.CSS.top + player2.CSS.height) {
-                player2.speed += 6;
+                player2.speed += 2;
             } else if (player2.CSS.top <= ball.CSS.top + ball.CSS.height / 8 &&
                 ball.CSS.top + ball.CSS.height / 8 <= player2.CSS.top + player2.CSS.height) {
                 player2.speed = 0;
             } else {
-                player2.speed -= 6;
+                player2.speed -= 2;
             }
         },
         player1CPU: function () {
             if (player1.CSS.top + player1.CSS.height < ball.CSS.top + ball.CSS.height) {
-                player1.speed += 6;
+                player1.speed += 2;
             } else if (player1.CSS.top < ball.CSS.top + ball.CSS.height &&
                 player1.CSS.top + player1.CSS.height > ball.CSS.top + ball.CSS.height) {
                 player1.speed = 0;
             } else {
-                player1.speed -= 6;
+                player1.speed -= 2;
             }
         },
         loop: function () {
@@ -303,8 +303,7 @@ function gameStart() {
                             ball.CSS.top + (ball.CSS.height / 2)) {
                             ballAngle = getBallAngle(120);
                         } else if (player1.CSS.top + (player1.CSS.height / 2) +
-                            (ball.CSS.height / 2) < ball.CSS.top + ball.CSS.height &&
-                            player1.CSS.top + player1.CSS.height > ball.CSS.top + (ball.CSS.height / 2)) {
+                            (ball.CSS.height / 2) < ball.CSS.top + ball.CSS.height) {
                             ballAngle = getBallAngle(60);
                         } else {
                             ballAngle = getBallAngle(90);
@@ -327,8 +326,7 @@ function gameStart() {
                             ball.CSS.top + (ball.CSS.height / 2)) {
                             ballAngle = getBallAngle(240);
                         } else if (player2.CSS.top + (player2.CSS.height / 2) +
-                            (ball.CSS.height / 2) < ball.CSS.top + ball.CSS.height &&
-                            player2.CSS.top + player2.CSS.height > ball.CSS.top + (ball.CSS.height / 2)) {
+                            (ball.CSS.height / 2) < ball.CSS.top + (ball.CSS.height / 2)) {
                             ballAngle = getBallAngle(300);
                         } else {
                             ballAngle = getBallAngle(270);
