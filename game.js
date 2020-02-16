@@ -135,7 +135,6 @@ function gameStart() {
             position: 'absolute',
             top: 0,
             left: 0,
-            borderRadius: 50,
             background: '#00203FFF'
         }
     };
